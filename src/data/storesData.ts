@@ -10,11 +10,11 @@ export interface OpeningHours {
 export interface Store {
   id: string;
   storeName: string;
-  storeAddress: string;
   logo: string;
   rating: number;
   reviewCount?: number;
-  address: string;
+  address: string; // The actual store address from Firestore (e.g., "31 Turf Club St")
+  location?: { lat: number; lng: number }; // Store GPS coordinates
   category: StoreCategory;
   openingHours?: OpeningHours;
   // Placeholders for future implementation

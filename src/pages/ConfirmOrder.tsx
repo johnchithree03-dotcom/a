@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { MapBackground } from '../components/MapBackground';
@@ -10,6 +10,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { database, auth, db } from '../config/firebase';
 import { ref, push, set } from 'firebase/database';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
+interface UserLocation {
+  lat: number | null;
+  lng: number | null;
+}
 
 interface ConfirmOrderProps {
   destination: string;
@@ -35,9 +40,29 @@ export const ConfirmOrder: React.FC<ConfirmOrderProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const [userLocation, setUserLocation] = useState<UserLocation>({ lat: null, lng: null });
   const { profile } = useUserProfile();
   const { createRide } = useFirebaseRide();
   const { isRideActive } = useRideContext();
+
+  // Get user's GPS location on component mount
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error('Error getting user location:', error);
+          // Keep null values if GPS fails
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    }
+  }, []);
 
   const {
     orderType = 'ride',
@@ -135,30 +160,63 @@ export const ConfirmOrder: React.FC<ConfirmOrderProps> = ({
     const currentUser = auth.currentUser;
     // Guest checkout is allowed per Firestore rules (allow create: if true)
 
+    // Clean items array - only include required fields
+    const cleanItems = (orderData.items || []).map((item: any) => ({
+      id: item.id || '',
+      name: item.name || '',
+      price: item.price || 0,
+      image: item.image || '',
+      category: type || item.category || 'food',
+    }));
+
+    // Build the exact Firestore document structure
     const deliveryOrder = {
-      type: type || 'food', // Category: food, clothes, hardware
+      // Order type
+      type: type || 'food', // "food" | "clothes" | "hardware"
+
+      // Store info
       storeId: orderData.storeId || '',
       storeName: orderData.storeName || '',
-      storeAddress: orderData.storeAddress || orderData.pickupAddress || '',
+      storeAddress: orderData.storeAddress || '', // Real store address from Firestore
+      storeLocation: orderData.storeLocation || { lat: null, lng: null },
+
+      // User info
       userId: currentUser?.uid || 'guest',
       userName: currentUser?.displayName || profile?.name || 'Guest User',
       userEmail: currentUser?.email || profile?.email || '',
-      items: orderData.items || [],
+
+      // User location from GPS (NOT extracted from address string)
+      userLocation: {
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+      },
+      destinationAddress: orderData.destinationAddress || '',
+
+      // Items
+      items: cleanItems,
+
+      // Pricing
       subtotal: orderData.subtotal || orderData.foodSubtotal || 0,
       deliveryFee: orderData.deliveryFee || 0,
       total: orderData.totalPrice || 0,
+
+      // Delivery mode
+      deliveryMode: orderData.deliveryMode ? {
+        id: orderData.deliveryMode.id || '',
+        fee: orderData.deliveryMode.deliveryFee || orderData.deliveryFee || 0,
+        estimatedTime: parseInt(orderData.deliveryMode.time) || 20,
+      } : null,
+
+      // Status
       status: 'pending',
       driverId: null,
       driverStatus: 'waiting',
+
+      // Prep time
       prepTime: 15,
-      userLocation: {
-        lat: null,
-        lng: null
-      },
-      destinationAddress: orderData.destinationAddress || '',
-      stops: orderData.stops || [],
-      deliveryMode: orderData.deliveryMode || null,
-      createdAt: serverTimestamp()
+
+      // Timestamp
+      createdAt: serverTimestamp(),
     };
 
     // Save to Firestore 'orders' collection

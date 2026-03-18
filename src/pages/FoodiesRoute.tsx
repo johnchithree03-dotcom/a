@@ -231,7 +231,8 @@ export function FoodiesRoute() {
     // Get store info from first cart item
     const storeId = cart[0]?.storeId || '';
     const storeName = cart[0]?.storeName || '';
-    const storeAddress = cart[0]?.storeAddress || '';
+    const storeAddress = cart[0]?.storeAddress || ''; // Real store address from Firestore
+    const storeLocation = (cart[0] as any)?.storeLocation || { lat: null, lng: null };
     const category = cart[0]?.category || 'food';
     
     const routeData = {
@@ -239,6 +240,7 @@ export function FoodiesRoute() {
       storeId,
       storeName,
       storeAddress,
+      storeLocation, // Store GPS coordinates
       category,
       stops: stops.map(stop => ({
         id: stop.id,
@@ -266,6 +268,7 @@ export function FoodiesRoute() {
   };
 
   const pickupLocation = cart[0]?.storeName || 'Store';
+  const pickupAddress = cart[0]?.storeAddress || '';
 
   const getFoodCountForStop = (stopId: string): number => {
     const stop = stops.find(s => s.id === stopId);
@@ -322,10 +325,15 @@ export function FoodiesRoute() {
               <X size={20} className="text-gray-800" />
             </motion.button>
 
-            <div className="flex-1 flex items-center gap-1 min-w-0">
-              <span className="text-sm font-semibold text-gray-900 truncate">{pickupLocation}</span>
-              <span className="text-gray-500 flex-shrink-0">→</span>
-              <span className="text-sm font-semibold text-gray-900 truncate">{deliveryLocation.split(',')[0] || 'Delivery'}</span>
+            <div className="flex-1 flex flex-col min-w-0">
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-semibold text-gray-900 truncate">{pickupLocation}</span>
+                <span className="text-gray-500 flex-shrink-0">→</span>
+                <span className="text-sm font-semibold text-gray-900 truncate">{deliveryLocation.split(',')[0] || 'Delivery'}</span>
+              </div>
+              {pickupAddress && (
+                <span className="text-[10px] text-gray-500 truncate">{pickupAddress}</span>
+              )}
             </div>
 
             <motion.button

@@ -188,6 +188,7 @@ export function FoodDelivery() {
     const storeId = routeData.storeId || cart[0]?.storeId || '';
     const storeName = routeData.storeName || cart[0]?.storeName || '';
     const storeAddress = routeData.storeAddress || cart[0]?.storeAddress || '';
+    const storeLocation = routeData.storeLocation || { lat: null, lng: null };
     const category = routeData.category || cart[0]?.category || 'food';
 
     navigate('/confirm-order', {
@@ -198,8 +199,8 @@ export function FoodDelivery() {
           deliveryMode: selectedDeliveryMode,
           storeId: storeId,
           storeName: storeName,
-          storeAddress: storeAddress,
-          pickupAddress: storeAddress || storeName || 'Store', // Use storeAddress as pickup
+          storeAddress: storeAddress, // Real address from Firestore (e.g., "31 Turf Club St")
+          storeLocation: storeLocation, // Store GPS coordinates
           destinationAddress: routeData.deliveryLocation || 'Destination',
           stops: stops || [],
           items: cart,

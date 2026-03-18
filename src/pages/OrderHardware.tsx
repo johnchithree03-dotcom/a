@@ -34,7 +34,7 @@ export const OrderHardware: React.FC = () => {
         }
 
         setStoreName(store.storeName);
-        setStoreAddress(store.storeAddress || '');
+        setStoreAddress(store.address || ''); // CRITICAL: Use store.address (Firestore field), not store.storeAddress
 
         // Fetch products for this store
         const storeProducts = await fetchProductsByStore(storeId);
