@@ -169,11 +169,14 @@ export const ConfirmOrder: React.FC<ConfirmOrderProps> = ({
     localStorage.setItem('currentDeliveryOrderId', orderId);
     localStorage.setItem('currentOrderType', 'delivery');
 
-    navigate('/waiting-for-driver', {
+    // Navigate to OrderTrackingPage for delivery orders (food, clothes, hardware)
+    navigate('/order-tracking', {
       state: {
-        orderType: 'delivery',
-        requestId: orderId,
-        orderData: deliveryOrder
+        orderId: orderId,
+        orderData: {
+          ...deliveryOrder,
+          id: orderId,
+        }
       }
     });
 

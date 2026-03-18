@@ -21,6 +21,8 @@ import { OrderClothes } from './pages/OrderClothes';
 import { OrderHardware } from './pages/OrderHardware';
 import { FoodiesRoute } from './pages/FoodiesRoute';
 import { FoodDelivery } from './pages/FoodDelivery';
+import { OrderTrackingPage } from './pages/OrderTrackingPage';
+import { LiveTrackingPage } from './pages/LiveTrackingPage';
 import { MessageProvider } from './contexts/MessageContext';
 import { RideProvider } from './contexts/RideContext';
 import { OrderSessionProvider } from './contexts/OrderSessionContext';
@@ -350,6 +352,14 @@ function AppContent() {
               <Route
                 path="/food-delivery"
                 element={<PageTransition><FoodDelivery /></PageTransition>}
+              />
+              <Route
+                path="/order-tracking"
+                element={<PageTransition><OrderTrackingPage /></PageTransition>}
+              />
+              <Route
+                path="/live-tracking"
+                element={<PageTransition><LiveTrackingPage /></PageTransition>}
               />
               <Route
                 path="/select-ride"
