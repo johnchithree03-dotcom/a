@@ -219,10 +219,21 @@ export const ConfirmOrder: React.FC<ConfirmOrderProps> = ({
       createdAt: serverTimestamp(),
     };
 
-    // Save to Firestore 'orders' collection
+    // Save to Firestore 'orders' collection (primary order database)
     const ordersRef = collection(db, 'orders');
     const docRef = await addDoc(ordersRef, deliveryOrder);
     const orderId = docRef.id;
+
+    // TESTING: Also write to stores/{storeId}/orders subcollection for store app popup testing
+    // This allows the store app to receive real-time order popups without a backend dispatch system
+    const storeId = orderData.storeId;
+    if (storeId) {
+      const storeOrdersRef = collection(db, 'stores', storeId, 'orders');
+      await addDoc(storeOrdersRef, {
+        ...deliveryOrder,
+        orderId: orderId, // Reference to the main orders collection document
+      });
+    }
 
     localStorage.setItem('currentDeliveryOrderId', orderId);
     localStorage.setItem('currentOrderType', 'delivery');
